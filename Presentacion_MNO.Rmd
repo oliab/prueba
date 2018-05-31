@@ -1,0 +1,363 @@
+---
+title: 'MNO: Números Aleatorios'
+author:
+- Carlos Castro Correa 103531
+- Oliab Herrera Coria 107863
+- Víctor Augusto Samayoa Donado 175750
+output:
+  pdf_document:
+    latex_engine: xelatex
+    toc: yes
+  html_document:
+    df_print: paged
+    highlight: tango
+    number_sections: yes
+    theme: lumen
+    toc: yes
+    toc_float: yes
+---
+
+---
+```{r,echo=FALSE}
+setwd("/Users/usuario/Documents/MaestriaCD/MNO/num_aleatorios/")
+```
+> Puede parecer perverso usar una computadora, la más precisa y determinista de todas las máquinas concebidas por la mente humana, para producir números "aleatorios".
+
+# Introducción
+
+El concepto de aleatoriedad es fundamental en diversas aplicaciones como lo pueden ser la en cuestiones de seguridad como la criptografía, actividades lúdicas como los juegos de azar e incluso aplicaciones científicas para generar simulaciones de algún fenómeno.
+
+**No existe una definición matemática sobre lo que se entiende por un número aleatorio**. Lo que sí existen son diferentes pruebas para determinar el grado de aleatoriedad de una secuencia de bits. Lo cual conlleva a dos conceptos: los **“verdaderos números aleatorios”** (TRNGs) y los **“pseudo números aleatorios”** (PRNGs).
+
+## Características de los números pseudo-aleatorios
+
+-   **Longitud de la cadena**: se refiere a la cantidad de números aleatorios que puede generar nuestra cadena antes de perder sus
+    propiedades de aleatoriedad y ciclo.
+-   **Aleatoriedad**: es importante que los números generados se comporten,
+    en la medida de lo posible, como realizaciones aleatorias, por
+    ejemplo, como las cadenas obtenidas a partir de los *generadores de
+    números aleatorios naturales*.
+-   **Pruebas**: son una serie de pruebas estadísticas que nos permiten
+    determinar, bajo cierto nivel de confianza, si una cadena de números
+    es *aleatoria* o lo rechazamos.
+-   **Ciclo**: es la cantidad de números pseudo-aleatorios generados antes
+    de que se repita el primer número de la cadena. Esta es una de las
+    propiedades más importantes de los algoritmos pues determinar qué
+    tan grande puede ser nuestro conjunto de números.
+    
+# Método congruencial.
+
+Esta técnica consiste en un algoritmo que produce una secuencia de número pseudo-aletorios generados a partir de una ecuación lineal. El algoritmo está definido por la siguiente relación de recurrencia, restricciones y variables:
+
+$X_{n+1}= (aX_n+c)$ mod $m$  
+
+con:  
+
+$0<m$  
+$0<a<m$  
+$0 \leq c <m$  
+$o \leq X_0 < m$
+
+
+Usando los parámtros: *m = 67*, *a = 3*, *c = 4* y $X_0 = 2$ observamos que después de 22 números generados el ciclo se repite.
+
+La siguiente cadena contiene poco más de 50 números por lo que vemos que el ciclo se repite dos veces.
+
+```{r, echo=FALSE, fig.align='center', out.width = '70%'}
+
+knitr::include_graphics("imagenes/imagen1.png")
+```
+
+## Maximización del ciclo o problema de optimización
+
+Además de el interés en que nuestras cadenas generadas sean suficientemente aleatorias, también nos interesa que sean lo más grandes posibles. En esta etapa de proyecto, primero intentamos plantear el caso como un problema de optimización, sin embargo no tenemos una representación explícita de la función objetivo a maximixar.
+
+Por otra parte, encontramos que Si $c>0$, **entonces la congruencia líneal genera una secuencia con ciclo máximo** (ciclo de valor m) si y sólo si se satisfacen las siguientes condiciones:
+
+- Los parámetros c y $m $ son primos relativos. Esto es M.C.D(m, c)=1
+- Para cada número primo p que divide a m, entonces a − 1 es un múltiplo de p
+- Si m es un múltiplo de 4 entonces a − 1 también es un múltiplo de 4
+
+# Pruebas de calidad de números aleatorios
+
+## Normalidad de borel
+Para que una cadena de caracteres sea considerada “Normal Borel” se debe satisfacer la siguiente desigualdad:
+
+ |P(Subsecuencia de m dígitos) - $\frac{1}{Qm}| < \sqrt\frac{log_Q^n}{n}$  donde $m log_Q(log_{Q^n})$  
+ 
+ Donde:  
+- $n$ es la longitud de la secuencia de dónde se obtienen las subsecuencias de longitud $m$  
+- $log_Q$ es el logaritmo en base $Q$  
+- $Q$ es el número de caracteres base de la cadena  
+
+Esto es, si tenemos números en base 10 entonces es logaritmo base 10, si tenemos números en base 2 (bits) entonces es logaritmo base 2.
+
+En el caso particular de base 2, para evaluar subsecuencias de longitud 1, es necesario que la secuencia principal sea de $2^2= 4$ dígitos. En el caso de subsecuencias de longitud 2, se necesita que la secuencia principal sea de $2^4=16$ dígitos. Y en general, la subsecuencias de longitud m, será necesario que la secuencia principal tenga $22^m$ dígitos.
+
+Como se puede ver conforme queramos asegurar aleatoriedad para números cada vez más grandes, esté criterios se volverá inmanejable.
+
+## Análisis de la implementación del método congruencial
+
+De la definición de ciclo notamos que el ciclo depende principalmente del número *m*. Esto debido principalmente a que se está usando la operación de *modulo* lo cuál solo nos permite obtener números del 0,1,...,*m-1*. Por tal motivo al hablar de máximizar el cíclo será siempre buscar un cíclo de valor *m* para un $m \in Z^+$ fijo.
+
+Sin embargo, los valores $a,c \in Z$ también juegan un papel importante en el cíclo, ya que si, por ejemplo, se usa un valor $a=0$ entonces sin importar el valor de la semilla (seed) siempre se tendrá que $X_{n+1}=c$ mod $m$. Además, la semilla también impacta en la obtención del cíclo.
+
+Por tal motivo, nos dimos a la tarea de investigar y generar diversas cadenas de números pseudoaleatorios con diferentes parámetros posibles para entender su impacto en el cíclo.
+
+
+La siguiente gráica se genero para un valor de *m*=7 y todas las posibles combinaciones de $a,c, seed \in Z$, tales que $a,b,seed <7$.
+
+```{r, echo=FALSE, fig.align='center', out.width = '70%'}
+
+knitr::include_graphics("imagenes/Imagenes_2/m7.png")
+```
+
+
+La siguiente gráica se genero para un valor de *m*=2048 y algunas de las posibles combinaciones de $a,c, seed \in Z$, tales que $a,b,seed <2048$.
+
+
+```{r, echo=FALSE, fig.align='center', out.width = '70%'}
+
+knitr::include_graphics("imagenes/Imagenes_2/m2048.png")
+```
+
+## Pruebas NIST
+
+
+La batería de pruebas del National Institute of Standards and Technology, es un paquete que consiste de 15 tests desarrollados para probar la aleatoriedad de secuencias de números binarias producidas ya sea por Hardware o Software. 
+
+Método congruencial m=8190, a=8191, c= 5751
+```{r, echo=FALSE, fig.align='center', out.width = '100%'}
+
+knitr::include_graphics("imagenes/test4.png")
+```
+
+
+Congruencial Paralelo
+```{r, echo=FALSE, fig.align='center', out.width = '100%'}
+
+knitr::include_graphics("imagenes/testpar.png")
+```
+Marsenne Twister Paralelo
+```{r, echo=FALSE, fig.align='center', out.width = '100%'}
+
+knitr::include_graphics("imagenes/testmt.png")
+```
+
+# Números Aleatorios en Paralelo
+
+La implementación de los algorítmos para la generación de números aleatorios en paralelo puede ser muy diferente, dependiendo de cada algoritmo, aún así el punto escencial en la paralelización es que cada thread genere un bloque particular, pero para esto necesita poder saltar entre bloques (skip-ahead).
+
+Hay un estado $Y_n$ que consiste en una o más variables sobre las que podemos avanzar por algún algoritmo tal que:  
+$$Y_{n+1}=f_1 (Y_n)$$  
+$$x_n=g(Y_n)$$
+donde $X_n$ es un PNGR.
+
+**Un algoritmo puede ser paralelizado utilizando el hecho de que puede hacer un salto de estado en la secuencia del modo**:  
+$$Y_{n+p}=f_p (Y_n)$$
+
+Existen tres maneras en los que se pueden realizar estos saltos:  
+
+- Simple: Cada thread salta a un punto en la secuencia y de ahí genera el bloque de números que le toca.  
+- Salto de rana: Siendo N threads, el n ésimo thread genera los números número n, n+N, n+2N ... de la secuencia.  
+- Mixto: Se hace un salto hacia un bloque de números y de ahí se generan en salto de rana.
+
+```{r, echo=FALSE, fig.align='center', out.width = '70%'}
+
+knitr::include_graphics("imagenes/block.jpg")
+```
+
+
+
+## Mersenne Twister
+
+El algoritmo Mersenne Twister fue desarrollado en 1997 por Makoto Matsumoto y Takuji Nishimura. La versión más usada es el MT19937 que usa un tamaño de cadena de 32 bits.
+
+El algoritmo está basado en la recurrencia:  
+$$X_{k+N}=X_{k+M} \oplus (X_k^u | X _{k+1}^l)D$$  
+Para k > 0, M < N son valores fijos y cada $X_i$ es una cadena de tamaño w. La expresion $(X_k^u | X _{k+1}^l)$ denota la concatenacion de los w-r bits más significativos de $X_k$ y los r menos significativos de $X_{k+1}$ para alguna r. La matriz D es de tamaño w x w y está dada por:  
+$$\begin{bmatrix} 
+    0 & 1 & 0  & 0 &\dots & 0\\
+    0 & 0 & 1 & 0 &\dots& 0\\
+    0 & 0 & 0 & 1 &\dots& 0\\
+    \vdots & \vdots & \vdots & \vdots & \dots & 1 \\
+    d_{w-1} & d_{w-2} & d_{w-3} &d_{w-4} & \dots & d_0
+    \end{bmatrix}$$  
+    
+Para implementar la paralelización podemos ver el MT 19937 como:
+$$Y_k = \begin{bmatrix} 
+     X_{N-1+k}\\
+     X_{N-2+k}\\
+     \vdots \\
+     X_{k}
+    \end{bmatrix}$$ 
+    
+Su denotamos $Y_0$ como la semilla entonces:
+$$Y_k=A^kY_o$$  y 
+$$Y_{k+1}=AY_k$$
+
+Esto puede ser visto como un polinomio:
+$$A^vY_0=g_v(A)Y_0 \\
+=(a_{k}A^{k-1}+a_{k-1}A_{k-2}+...++a_{2}A_{}++a_{1}I)Y_0 \\
+=a_{k}Y_{k-1}+a_{k-1}Y_{k-2}+...+a_{2}Y_{1}+a_{1}Y_{0}$$  
+
+Esto nos da flexibilidad a la hora de hacer el skip-ahead. Aunque puede ser muy tardado ir generando cada salto esto se debe hacer en caso de querer generar cadenas muy grandes ya que el costo en tiempo es menor al costo en memoria.
+ 
+ Entonces las estrategias para hacer el skip-ahead son:
+ - Si el número de puntos a calcular es pequeño podemos calcular $$Y_k=A^kY_0$$
+ - Si el número de puntos a calcular es mediano podemos pre computar y guardar elementos del plinomio. Esta información se copia del host al device donde se hace el cálculo.
+- En caso de tener un número grande de números a generar, habrá que generar los elementos del polinomio al vuelo en el device.
+
+Entonces vamos a hacer un cálculo del vector $Y_k$ de longitud 224 en un thread, y vamos a hacer el cálculo de todo el bloque de números para después hacer la actualización del vector de estados o tomarlos de la manera en que se haya decidido hacer el skip ahead.
+
+En la implementación al usarn cuRAND hay un host y un device, el host es el encargado de guardar la semilla y los estados y en el device se van haciendo los cálculos
+
+
+```{r, include=FALSE}
+library(readxl)
+library(readr)
+library(tidyverse)
+library(plyr)
+library(ggplot2)
+library(lubridate)
+library(tidyverse)
+library(textreuse)
+library(tidygraph)
+library(ggraph)
+library(visNetwork)
+library(knitr)
+library(gridExtra)
+library(plotly)
+library(htmlwidgets)
+```
+
+# Cadenas de números aleatorios y sus aplicaciones
+
+El objetivo de esta sección en nuestro trabajo consiste en evaluar la eficiencia de las cadenas de números aleatorios que hemos generado, a través de distintos generadores, por medio de su aplicación en problemas reales.
+
+El ejemplo más sencillo de cómo la simulación **Monte Carlo**, basada en cadenas de números aleatorios, puede aplicarse para resolver problemas reales consiste en aproximar el área de una integral o el área de un círculo.
+
+```{r, echo=FALSE, fig.align='center', out.width = '50%'}
+
+knitr::include_graphics("imagenes/foto1.png")
+```
+
+Con la ecuación del círculo $x^2 + y^2 ≤ r^2$, y tomando en cuenta que en el problema $r$=0.5 podemos seguir los siguientes pasos para encontrar el área:
+
+-a) Tomamos un número de cada cadena de números aleatorios y elevamos cada uno al cuadrado.
+
+-b) Definimos una variable $Z_i$ tal que $Z_i=1$ si $r^2 ≤ 0.25$ y $Z_i$ = 0 en otro caso.
+
+-c) Para calcular el área del círculo, tenemos que dividir la suma de los valores $X_i$ entre la longitud de una cadena de números aleatorios.
+
+Por ejemplo, si después de realizar una simulación con dos cadenas $x$ y $y$ de 100 números aleatorios obtuvimos que 78 números cayeron dentro del círculo, la estimación del área es igual a $78 / 100 = 0.78$.
+
+
+```{r, echo=FALSE, warning=FALSE, cache=TRUE}
+tabla <- data.frame(Nombre = c("Numerical Recipes","Turbo Pascal","Microsoft Visual Basic","cc65","Propio"),
+                    a = c(1664525,134775813,1140671485,16843009,8192),
+                    m = c(4294967296,4294967296,16777216,4294967296,8191),
+                    c= c(1013904223,1,12820163,826366247,5751))
+tabla
+```
+
+## Convergencia al Resultado
+Para medir el desempeño de nuestros distintos generadores (parámetros), podemos graficar cadenas de 10,000 números y ver qué tan rápido se aproximan al valor real del área del círculo igual a **0.7854**:
+
+- Como esperamos, de acuerdo al Teorema Central del Límite, al inicio todas las cadenas tienen una alta varianza.
+- A partir de la iteración 250 empiezan a acercarse a un valor hasta que poco a poco las cadenas empiezan a converger.
+- Notamos que a partir de la iteración 500 nuestro algoritmo **Propio** converge a un valor, pero alejado aún del valor real. 
+
+```{r, echo=FALSE, warning=FALSE, cache=FALSE}
+Cadenas <- read_excel("Cadenas.xlsx","Resultados")
+
+#mayor <- which(Cadenas$Iteracion <= 1000)
+#Cadenas <- Cadenas[mayor,]
+p1 <- ggplot() + geom_line(aes(y = resultado, x = Iteracion, colour = method),
+                           data = Cadenas, stat="identity") +ggtitle("Convergencia al resultado")
+
+p1
+```
+
+- Si solo observamos las últimas 2,000 iteraciones, la convergencia es muy clara.
+- Podemos observar que el método Turbo Pascal es método que más se acerca a la solución real.
+- Debido al tamaño de la cadena, prácticamente todos los algoritmos reprensentan una buena aproximación, sin embargo, Turbo Pascal se aproxima más al valor real del área.
+- De nueva cuenta, podemos ver que el error cuadrático medio del algoritmo **Propio** oscila en un rango alejado del valor real.
+
+```{r, echo=FALSE, warning=FALSE, cache=TRUE}
+Cadenas <- read_excel("Cadenas.xlsx","Resultados")
+
+
+mayor <- which(Cadenas$Iteracion >= 8000)
+Cadenas <- Cadenas[mayor,]
+
+cutoff <- data.frame( x = c(-Inf, Inf), y = 0.7854, cutoff = factor(0.7854) )
+p1 <- ggplot() + geom_line(aes(y = resultado, x = Iteracion, colour = method),
+                           data = Cadenas, stat="identity") + 
+        geom_line(aes( x, y, linetype = cutoff ), cutoff)
+p1
+```
+## Error cuadrático medio
+
+Otra forma de ver qué tan bien funcionan nuestros algormitmos es con el **error cuadrático medio** (al valor real de nuestro algoritmo), reptiendo la idea anterior, observamos que en la siguiente gráfica:
+
+- Observamos que el error cuadrático medio en todas las cadenas es grande en la primeras iteraciones, posteriormente después de 500 números parece que el error cuadrático para todos los casos comienza a converger a cero.
+- El algoritmo **Propio** tiene un error cuadrático medio más grande que el obtenido por los demás métodos, además se queda alrededor de este durante toda la simulación.
+
+```{r, echo=FALSE, warning=FALSE, cache=TRUE}
+
+Cadenas <- read_excel("Cadenas.xlsx","Resultados")
+Cadenas$resultado <- (0.7854 - Cadenas$resultado)^(2)
+
+#mayor <- which(Cadenas$Iteracion > 8500)
+#  Cadenas <- Cadenas[mayor,]
+p2 <- ggplot() + geom_line(aes(y = resultado, x = Iteracion, colour = method),
+                           data = Cadenas, stat="identity")
+p2
+```
+
+- Si observamos las primeras 500 iteraciones podemos ver una alta varianza en el error cuadrático medio.
+- El algoritmo que más tarda en empezar a converger es el de Microsoft Visual Basic.
+
+```{r, echo=FALSE, warning=FALSE, cache=TRUE}
+
+Cadenas <- read_excel("Cadenas.xlsx","Resultados")
+Cadenas$resultado <- (0.7854 - Cadenas$resultado)^(2)
+
+mayor <- which(Cadenas$Iteracion < 500)
+  Cadenas <- Cadenas[mayor,]
+p2 <- ggplot() + geom_line(aes(y = resultado, x = Iteracion, colour = method),
+                           data = Cadenas, stat="identity")
+p2
+```
+
+- Finalmente, si observamos las últimas 2,000 iteraciones, verificamos que el error cuadrático medio es muy cercano a 0.
+- Notemos que el orden de magnitud es de $10^-5$.
+- Confirmamos que el Turbo Pascal es el algoritmo que funciona mejor, es el más cercano a cero y, al parecer, sigue convergiendo.
+
+```{r, echo=FALSE, warning=FALSE, cache=TRUE}
+
+Cadenas <- read_excel("Cadenas.xlsx","Resultados")
+Cadenas <- Cadenas[which(Cadenas$method != "Propio"),]
+Cadenas$resultado <- (0.7854 - Cadenas$resultado)^(2)
+
+mayor <- which(Cadenas$Iteracion >= 8000)
+  Cadenas <- Cadenas[mayor,]
+p2 <- ggplot() + geom_line(aes(y = resultado, x = Iteracion, colour = method),
+                           data = Cadenas, stat="identity")
+p2
+```
+
+- Si incluimos en la gráfica el error de nuestro algoritmo notamos que el orden de magnitud es muy distinto respecto a los demás:
+
+```{r, echo=FALSE, warning=FALSE, cache=TRUE}
+
+Cadenas <- read_excel("Cadenas.xlsx","Resultados")
+Cadenas$resultado <- (0.7854 - Cadenas$resultado)^(2)
+
+mayor <- which(Cadenas$Iteracion >= 8000)
+  Cadenas <- Cadenas[mayor,]
+p2 <- ggplot() + geom_line(aes(y = resultado, x = Iteracion, colour = method),
+                           data = Cadenas, stat="identity")
+p2
+```
